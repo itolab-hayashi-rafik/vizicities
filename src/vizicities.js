@@ -13,6 +13,7 @@ import TopoJSONLayer, {topoJSONLayer} from './layer/TopoJSONLayer';
 import PolygonLayer, {polygonLayer} from './layer/geometry/PolygonLayer';
 import PolylineLayer, {polylineLayer} from './layer/geometry/PolylineLayer';
 import PointLayer, {pointLayer} from './layer/geometry/PointLayer';
+import VehicleLayer, {vehicleLayer} from './layer/object/VehicleLayer';
 
 import Point, {point} from './geo/Point';
 import LatLon, {latLon} from './geo/LatLon';
@@ -49,6 +50,8 @@ const VIZI = {
   polylineLayer: polylineLayer,
   PointLayer: PointLayer,
   pointLayer: pointLayer,
+  VehicleLayer: VehicleLayer,
+  vehicleLayer: vehicleLayer,
   Point: Point,
   point: point,
   LatLon: LatLon,
