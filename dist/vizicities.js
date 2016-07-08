@@ -18753,6 +18753,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      var vehicle = {
 	        vid: undefined,
 	        modelName: modelName,
+	        model: null,
 	        latlon: latlon,
 	        options: options,
 	        mesh: null,
@@ -18790,6 +18791,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        mesh.translateY(model.translation.y);
 	        mesh.translateZ(model.translation.z);
 	        this.add(mesh);
+	        vehicle.model = model;
 	        vehicle.mesh = mesh;
 	        vehicle.setLocation(vehicle.latlon.lat, vehicle.latlon.lon);
 	      }
@@ -18819,7 +18821,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	          var position = this._world.latLonToPoint(vehicle.latlon);
 	
 	          // update the location
-	          vehicle.mesh.position.set(position.x, 50, position.y);
+	          vehicle.mesh.position.set(vehicle.model.translation.x + position.x, vehicle.model.translation.y + 50, vehicle.model.translation.z + position.y);
 	        }
 	      }
 	    }
@@ -18842,7 +18844,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        // if the vehicle mesh is created
 	        if (vehicle.mesh != null) {
 	          // update the position
-	          vehicle.mesh.position.set(point.x, 50, point.y);
+	          vehicle.mesh.position.set(vehicle.model.translation.x + point.x, vehicle.model.translation.y + 50, vehicle.model.translation.z + point.y);
 	        }
 	
 	        // calculate and update the location
@@ -18867,7 +18869,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        // if the vehicle mesh is created
 	        if (vehicle.mesh != null) {
 	          // update the rotation
-	          vehicle.mesh.rotation.set(rx, ry, rz);
+	          vehicle.mesh.rotation.set(vehicle.model.rotation.rx + rx, vehicle.model.rotation.ry + ry, vehicle.model.rotation.rz + rz);
 	        }
 	      }
 	    }

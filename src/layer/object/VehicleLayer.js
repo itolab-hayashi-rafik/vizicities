@@ -129,6 +129,7 @@ class VehicleLayer extends Layer {
     var vehicle = {
       vid: undefined,
       modelName: modelName,
+      model: null,
       latlon: latlon,
       options: options,
       mesh: null,
@@ -165,6 +166,7 @@ class VehicleLayer extends Layer {
       mesh.translateY(model.translation.y);
       mesh.translateZ(model.translation.z);
       this.add(mesh);
+      vehicle.model = model;
       vehicle.mesh = mesh;
       vehicle.setLocation(vehicle.latlon.lat, vehicle.latlon.lon);
     }
@@ -192,7 +194,11 @@ class VehicleLayer extends Layer {
         var position = this._world.latLonToPoint(vehicle.latlon);
 
         // update the location
-        vehicle.mesh.position.set(position.x, 50, position.y);
+        vehicle.mesh.position.set(
+          vehicle.model.translation.x + position.x,
+          vehicle.model.translation.y + 50,
+          vehicle.model.translation.z + position.y
+        );
       }
     }
   }
@@ -213,7 +219,11 @@ class VehicleLayer extends Layer {
       // if the vehicle mesh is created
       if (vehicle.mesh != null) {
         // update the position
-        vehicle.mesh.position.set(point.x, 50, point.y);
+        vehicle.mesh.position.set(
+          vehicle.model.translation.x + point.x,
+          vehicle.model.translation.y + 50,
+          vehicle.model.translation.z + point.y
+        );
       }
 
       // calculate and update the location
@@ -236,7 +246,11 @@ class VehicleLayer extends Layer {
       // if the vehicle mesh is created
       if (vehicle.mesh != null) {
         // update the rotation
-        vehicle.mesh.rotation.set(rx, ry, rz);
+        vehicle.mesh.rotation.set(
+          vehicle.model.rotation.rx + rx,
+          vehicle.model.rotation.ry + ry,
+          vehicle.model.rotation.rz + rz
+        );
       }
     }
   }

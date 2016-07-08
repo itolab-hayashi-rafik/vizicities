@@ -132,7 +132,7 @@ world.on('preUpdate', function(delta) {
   t += delta;
   for (var i = 0; i < veyrons.length; i++) {
     veyrons[i].setLocation(veyrons[i].latlon.lat + 0.00002*Math.sin(t), veyrons[i].latlon.lon + 0.00002*Math.cos(t));
-    veyrons[i].setRotation(0, 90*Math.PI/180 + t, 0);
+    veyrons[i].setRotation(0, t, 0);
   }
 });
 
