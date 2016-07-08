@@ -196,7 +196,7 @@ class VehicleLayer extends Layer {
         // update the location
         vehicle.mesh.position.set(
           vehicle.model.translation.x + position.x,
-          vehicle.model.translation.y + 50,
+          vehicle.model.translation.y,  // TODO: need to set the height of the ground
           vehicle.model.translation.z + position.y
         );
       }
