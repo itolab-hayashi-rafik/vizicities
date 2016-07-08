@@ -106,16 +106,21 @@ var topoJSONBuildingLayer = VIZI.topoJSONTileLayer('https://vector.mapzen.com/os
 
 // car layer
 var vehicleLayer = VIZI.vehicleLayer({
-  'veyron': './obj/veyron/VeyronNoUv_bin.js'
+  'veyron': {
+    file: './obj/veyron/VeyronNoUv_bin.js',
+    scale: 0.1,
+    translation: {x: 0, y: 0, z: 0},
+    rotation: {rx: 0, ry: 90*Math.PI/180, rz: 0}
+  }
 }, {
   style: {
-    scale: 1
+    height: 0
   }
 }).addTo(world);
 
 // add cars
 var veyrons = [];
-for (var i = 0; i < 3; i++) {
+for (var i = 0; i < 1; i++) {
   veyrons.push(
     vehicleLayer.addVehicle('veyron', new VIZI.LatLon(35.157236, 136.924981 + 0.003*i))
   );
@@ -126,8 +131,8 @@ var t = 0;
 world.on('preUpdate', function(delta) {
   t += delta;
   for (var i = 0; i < veyrons.length; i++) {
-    veyrons[i].setLocation(veyrons[i].latlon.lat + 0.0002*Math.sin(t), veyrons[i].latlon.lon + 0.0002*Math.cos(t));
-    veyrons[i].setRotation(0, 120*180/Math.PI + t, 0);
+    veyrons[i].setLocation(veyrons[i].latlon.lat + 0.00002*Math.sin(t), veyrons[i].latlon.lon + 0.00002*Math.cos(t));
+    veyrons[i].setRotation(0, 90*Math.PI/180 + t, 0);
   }
 });
 

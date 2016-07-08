@@ -18646,6 +18646,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	  function VehicleLayer(models, options) {
 	    _classCallCheck(this, VehicleLayer);
 	
+	    var modelDefaults = {
+	      file: null,
+	      scale: 1,
+	      translation: { x: 0, y: 0, z: 0 },
+	      rotation: { rx: 0, ry: 0, rz: 0 }
+	    };
+	    for (key in models) {
+	      models[key] = (0, _lodashAssign2['default'])({}, modelDefaults, models[key]);
+	    }
+	
 	    var defaults = {
 	      output: true,
 	      interactive: false,
@@ -18661,8 +18671,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        transparent: false,
 	        opacity: 1,
 	        blending: _three2['default'].NormalBlending,
-	        height: 0,
-	        scale: 1
+	        height: 0
 	      }
 	    };
 	
@@ -18709,7 +18718,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      for (modelName in this._models) {
 	        this._geometries[modelName] = null;
 	
-	        bloader.load(this._models[modelName], function (geometry) {
+	        bloader.load(this._models[modelName].file, function (geometry) {
 	          self._geometries[modelName] = geometry;
 	
 	          counter++;
@@ -18769,10 +18778,17 @@ return /******/ (function(modules) { // webpackBootstrap
 	    key: '_addVehicleInternal',
 	    value: function _addVehicleInternal(vehicle) {
 	      if (this._modelsLoaded) {
+	        var model = this._models[vehicle.modelName];
 	        var geometry = this._geometries[vehicle.modelName];
 	        var orange = new _three2['default'].MeshLambertMaterial({ color: 0x995500, opacity: 1.0, transparent: false });
 	        var mesh = new _three2['default'].Mesh(geometry, orange);
-	        mesh.scale.x = mesh.scale.y = mesh.scale.z = this._options.style.scale;
+	        mesh.scale.x = mesh.scale.y = mesh.scale.z = model.scale;
+	        mesh.rotateX(model.rotation.x);
+	        mesh.rotateY(model.rotation.y);
+	        mesh.rotateZ(model.rotation.z);
+	        mesh.translateX(model.translation.x);
+	        mesh.translateY(model.translation.y);
+	        mesh.translateZ(model.translation.z);
 	        this.add(mesh);
 	        vehicle.mesh = mesh;
 	        vehicle.setLocation(vehicle.latlon.lat, vehicle.latlon.lon);
