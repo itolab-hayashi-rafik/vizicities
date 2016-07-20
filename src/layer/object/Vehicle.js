@@ -7,12 +7,12 @@
 import SimObject from './SimObject';
 
 class Vehicle extends SimObject {
-  constructor(vehicleModel){
+  constructor(vehicleModel, callback){
     super();
 
     // parameters
     this.model    = vehicleModel;
-    this.callback = function(self){};
+    this.callback = callback || function(self){};
 
     // properties
     this.wheelAngle           = 0.0;
@@ -160,7 +160,6 @@ class Vehicle extends SimObject {
       if (this.callback) {
         this.callback(self);
       }
-
     }
   }
   // ---

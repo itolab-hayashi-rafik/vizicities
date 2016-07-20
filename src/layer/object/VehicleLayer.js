@@ -32,6 +32,8 @@ import VehiclePositionShader from './VehiclePositionShader';
 import VehicleShader from './VehicleShader';
 import ObjectUtils from '../../util/ObjectUtils';
 
+const MODEL_PREFIX = 'vehicle:';
+
 class VehicleLayer extends SimObjectLayer {
   constructor(models, options) {
     var defaults = {
@@ -57,10 +59,7 @@ class VehicleLayer extends SimObjectLayer {
 
     this._modelsLoaded = false;
     this._models = extend({}, models);
-    this._geometries = {};
-    this._textures = {};
     this._entries = [];
-    this._gpuCompute = null;
   }
 
   _onAdd(world) {
@@ -70,7 +69,7 @@ class VehicleLayer extends SimObjectLayer {
       // add callback
       this.on('loadCompleted', this._onLoadCompleted);
 
-      // add car
+      // load models
       this._loadModels();
     }
   }
@@ -112,7 +111,7 @@ class VehicleLayer extends SimObjectLayer {
       }, callback);
 
       // register to the repos
-      modelRepository.add(modelName, vehicleModel);
+      modelRepository.add(MODEL_PREFIX + modelName, vehicleModel);
     });
 
     // callback
@@ -139,7 +138,7 @@ class VehicleLayer extends SimObjectLayer {
   }
 
   addVehicle(modelName, latlon, angle, options) {
-    if (!modelRepository.contains(modelName)) {
+    if (!modelRepository.contains(MODEL_PREFIX + modelName)) {
       throw new Error('Vehicle model ' + modelName + ' does not exist.');
     }
 
@@ -148,9 +147,6 @@ class VehicleLayer extends SimObjectLayer {
     var entry = {
       id: undefined,
       modelName: modelName,
-      model: null,
-      latlon: latlon,
-      angle: angle,
       options: options,
       vehicle: null,
       setLocation: function(lat, lon, angle) {
@@ -172,7 +168,7 @@ class VehicleLayer extends SimObjectLayer {
   _addVehicleInternal(entry) {
     if (this._modelsLoaded) {
 
-      var vehicleModel = modelRepository.get(entry.modelName);
+      var vehicleModel = modelRepository.get(MODEL_PREFIX + entry.modelName);
       var vehicle = new Vehicle(vehicleModel);
       this.add(vehicle);
 

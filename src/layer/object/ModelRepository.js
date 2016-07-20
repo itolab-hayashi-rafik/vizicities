@@ -7,8 +7,8 @@ class ModelRepository {
     this._map = {};
   }
 
-  add(modelName, vehicleModel) {
-    this._map[modelName] = vehicleModel;
+  add(modelName, model) {
+    this._map[modelName] = model;
   }
 
   get(modelName) {
