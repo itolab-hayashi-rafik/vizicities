@@ -191,6 +191,31 @@ vehicleLayer.on('loadCompleted', function() {
 //
 // });
 
+// pedestrian layer
+var pedestrianLayer = VIZI.pedestrianLayer({
+  'monkey': {
+    file: {
+      body: './json/monkey/monkey.json',
+    },
+    scale: 1.0,
+    translation: {x: 0, y: 0, z: 0},
+    rotation: {x: 0, y: 0, z: 0}
+  }
+}, {
+  simWidth: 32,
+  style: {
+    height: 0
+  }
+}).addTo(world);
+
+// add pedestrians
+var monkeys = [];
+for (var i = 0; i < 1; i++) {
+  monkeys.push(
+    pedestrianLayer.addPedestrian('monkey', new VIZI.LatLon(35.157236 + (0.0003*~~(i/10)), 136.924981 + 0.0003*(i%10)), 0.0)
+  );
+}
+
 // London Underground lines
 // VIZI.geoJSONLayer('https://rawgit.com/robhawkes/4acb9d6a6a5f00a377e2/raw/30ae704a44e10f2e13fb7e956e80c3b22e8e7e81/tfl_lines.json', {
 //   output: true,
