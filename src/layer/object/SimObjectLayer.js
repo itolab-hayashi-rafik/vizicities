@@ -162,7 +162,7 @@ class SimObjectLayer extends Layer {
    */
   setLocation(id, lat, lon, angle) {
     // calculate the position
-    var point = this._world.latLonToPoint(latLon(lat, lon));
+    var point = this._world.latLonToPoint(LatLon(lat, lon));
     this.setPosition(id, point.x, 0, point.y, angle);
   }
 
@@ -277,7 +277,7 @@ class SimObjectLayer extends Layer {
 
     var positions = {};
     Object.keys(locations).forEach(function(id) {
-      var point = self._world.latLonToPoint(latLon(locations[id].lat, locations[id].lon));
+      var point = self._world.latLonToPoint(LatLon(locations[id].lat, locations[id].lon));
       positions[id] = {x: point.x, y: 0.0, z: point.y, angle: locations[id].angle};
     });
 

@@ -4,7 +4,6 @@
 /**
  * Created by masayuki on 20/07/2016.
  */
-import LatLon from '../../geo/LatLon';
 
 class SimObject {
   constructor() {
@@ -45,7 +44,6 @@ class SimObject {
    * @param {Number} x x
    * @param {Number} y y
    * @param {Number} z z
-   * @param {Boolean} updateLatLon true if latLon property needs to be updated
    */
   setPosition(x, y, z) {
     this.root.position.set(x, y, z);
