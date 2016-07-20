@@ -14,7 +14,7 @@
 // TODO: Allow _setBufferAttributes to use a custom function passed in to
 // generate a custom mesh
 
-import Layer from '../Layer';
+import SimObjectLayer from './SimObjectLayer';
 import extend from 'lodash.assign';
 import THREE from 'three';
 import {latLon as LatLon} from '../../geo/LatLon';
@@ -32,10 +32,21 @@ import VehiclePositionShader from './VehiclePositionShader';
 import VehicleShader from './VehicleShader';
 import ObjectUtils from '../../util/ObjectUtils';
 
-class VehicleLayer extends Layer {
+class VehicleLayer extends SimObjectLayer {
   constructor(models, options) {
+    var defaults = {
+      output: true,
+    };
+
+    var _options = extend({}, defaults, options);
+
+    super(_options);
+
     var modelDefaults = {
-      file: null,
+      file: {
+        body: null,
+        wheel: null
+      },
       scale: 1,
       translation: {x: 0, y: 0, z: 0},
       rotation: {rx: 0, ry: 0, rz: 0}
@@ -44,49 +55,23 @@ class VehicleLayer extends Layer {
       models[key] = extend({}, modelDefaults, models[key]);
     }
 
-    var defaults = {
-      output: true,
-      // simulation:
-      simWidth: 2,
-      // This default style is separate to Util.GeoJSON.defaultStyle
-      style: {
-        color: '#ffffff',
-        transparent: false,
-        opacity: 1,
-        blending: THREE.NormalBlending,
-        height: 0
-      }
-    };
-
-    var _options = extend({}, defaults, options);
-
-    super(_options);
-
     this._modelsLoaded = false;
     this._models = extend({}, models);
     this._geometries = {};
     this._textures = {};
-    this._vehicles = [];
+    this._entries = [];
     this._gpuCompute = null;
   }
 
   _onAdd(world) {
-    var self = this;
+    super._onAdd(world);
 
     if (this.isOutput()) {
-      // initialize GPUComputeRenderer
-      this._initComputeRenderer();
-
       // add callback
       this.on('loadCompleted', this._onLoadCompleted);
 
       // add car
       this._loadModels();
-
-      // add listener
-      world.on('preUpdate', function(delta) {
-        self._onWorldUpdate(delta);
-      });
     }
   }
 
@@ -145,17 +130,11 @@ class VehicleLayer extends Layer {
     this._modelsLoaded = true;
 
     // iterate over all the vehicles already added and add meshes to the world
-    for (var i = 0; i < this._vehicles.length; i++) {
-      var vehicle = this._vehicles[i];
-      if (vehicle.vehicle === null) {
-        this._addVehicleInternal(vehicle);
+    for (var i = 0; i < this._entries.length; i++) {
+      var entry = this._entries[i];
+      if (entry.vehicle === null) {
+        this._addVehicleInternal(entry);
       }
-    }
-  }
-
-  _onWorldUpdate(delta) {
-    if (this._gpuCompute) {
-      this._performUpdate(delta);
     }
   }
 
@@ -166,8 +145,8 @@ class VehicleLayer extends Layer {
 
     var self = this;
 
-    var vehicle = {
-      vid: undefined,
+    var entry = {
+      id: undefined,
       modelName: modelName,
       model: null,
       latlon: latlon,
@@ -175,31 +154,31 @@ class VehicleLayer extends Layer {
       options: options,
       vehicle: null,
       setLocation: function(lat, lon, angle) {
-        self.setLocation(this.vid, lat, lon, angle);
+        self.setLocation(this.vehicle.id, lat, lon, angle);
       },
       setPosition: function(x, y, z, angle) {
-        self.setPosition(this.vid, x, y, z, angle);
+        self.setPosition(this.vehicle.id, x, y, z, angle);
       }
     };
-    var total = this._vehicles.push(vehicle);
-    vehicle.vid = (total - 1);
+    var total = this._entries.push(entry);
+    entry.id = (total - 1);
 
     // add vehicle if the model is already loaded
-    this._addVehicleInternal(vehicle);
+    this._addVehicleInternal(entry);
 
-    return vehicle;
+    return entry;
   }
 
-  _addVehicleInternal(vehicle) {
+  _addVehicleInternal(entry) {
     if (this._modelsLoaded) {
 
-      var vehicleModel = modelRepository.get(vehicle.modelName);
-      var v = new Vehicle(vehicleModel);
-      this.add(v.root);
+      var vehicleModel = modelRepository.get(entry.modelName);
+      var vehicle = new Vehicle(vehicleModel);
+      this.add(vehicle);
 
-      vehicle.vehicle = v;
+      entry.vehicle = vehicle;
 
-      // var vid = vehicle.vid;
+      // var id = vehicle.id;
       //
       // var model = this._models[vehicle.modelName];
       // var geometry = this._geometries[vehicle.modelName];
@@ -229,309 +208,11 @@ class VehicleLayer extends Layer {
     }
   }
 
-  // initialize GPUComputationRenderer
-  _initComputeRenderer() {
-    var gpuCompute = new GPUComputationRenderer(this._options.simWidth, this._options.simWidth, this._world._engine._renderer);
-
-    // create textures
-    var textureAcceleration = gpuCompute.createTexture();
-    var textureVelocity = gpuCompute.createTexture();
-    var texturePosition = gpuCompute.createTexture();
-
-    var velocityVariable = gpuCompute.addVariable('textureVelocity', VehicleVelocityShader, textureVelocity);
-    var positionVariable = gpuCompute.addVariable('texturePosition', VehiclePositionShader, texturePosition);
-
-    gpuCompute.setVariableDependencies(velocityVariable, [positionVariable, velocityVariable]);
-    gpuCompute.setVariableDependencies(positionVariable, [positionVariable, velocityVariable]);
-
-    var positionUniforms = positionVariable.material.uniforms;
-    var velocityUniforms = velocityVariable.material.uniforms;
-
-    velocityVariable.wrapS = THREE.RepeatWrapping;
-    velocityVariable.wrapT = THREE.RepeatWrapping;
-    positionVariable.wrapS = THREE.RepeatWrapping;
-    positionVariable.wrapT = THREE.RepeatWrapping;
-
-    velocityUniforms.textureAcceleration.value = textureAcceleration;
-
-    var error = gpuCompute.init();
-    if (error !== null) {
-      console.error(error);
-    }
-
-    this._gpuCompute = gpuCompute;
-    this._textureAcceleration = textureAcceleration;
-    this._textureVelocity = textureVelocity;
-    this._texturePosition = texturePosition;
-    this._positionVariable = positionVariable;
-    this._velocityVariable = velocityVariable;
-    this._positionUniforms = positionUniforms;
-    this._velocityUniforms = velocityUniforms;
-  }
-
-  // perform update
-  _performUpdate(delta) {
-    var now = performance.now();
-
-    this._positionUniforms.time.value = now;
-    this._positionUniforms.delta.value = delta;
-    this._velocityUniforms.time.value = now;
-    this._velocityUniforms.delta.value = delta;
-
-    this._gpuCompute.compute();
-
-    // transfer vehicles' parameters from gpu to cpu
-    var texturePosition = this._gpuCompute.readVariable(this._positionVariable, this._texturePosition);
-    for (var i = 0; i < this._vehicles.length; i++) {
-      var vehicle = this._vehicles[i];
-      if (vehicle.vehicle) {
-        var x = texturePosition.image.data[i * 4 + 0];
-        var y = texturePosition.image.data[i * 4 + 1];
-        var z = texturePosition.image.data[i * 4 + 2];
-        var angle = texturePosition.image.data[i * 4 + 3];
-        vehicle.setPosition(x, y, z, angle);
-
-        // TODO: transfer textureVelocity and update the rendering object
-      }
-    }
-
-    // (for gpgpu rendering (no transfer to cpu))
-    // for (var i = 0; i < this._vehicles.length; i++) {
-    //   var vehicle = this._vehicles[i];
-    //   if (vehicle.mesh) {
-    //     vehicle.mesh.material.uniforms.texturePosition.value = this._gpuCompute.getCurrentRenderTarget(this._positionVariable).texture;
-    //     if (vehicle.mesh.material.uniforms.texture) {
-    //       vehicle.mesh.material.uniforms.texture.value = this._textures[vehicle.modelName];
-    //     }
-    //   }
-    // }
-  }
-
-  /**
-   * Set the location of a specific vehicle
-   *
-   * @param {number} vid vehicle id
-   * @param {number} lat latitude
-   * @param {number} lon longitude
-   * @param {number} angle angle
-   */
-  setLocation(vid, lat, lon, angle) {
-    this._setLocation(vid, lat, lon, angle);
-
-    if (this._gpuCompute) {
-      // console.log('this._setSimPosition(' + vid + ', ' + point.x + ', ' + 0 + ', ' + point.y + ', ' + angle + ')');
-      this._setSimPosition(vid, point.x, 0, point.y, angle);
-    }
-  }
-
-  // internal helper for setLocation()
-  _setLocation(vid, lat, lon, angle) {
-    // if the vehicle exists
-    if (vid in this._vehicles) {
-      var vehicle = this._vehicles[vid];
-
-      // update latlon
-      vehicle.latlon.lat = lat;
-      vehicle.latlon.lon = lon;
-
-      if (vehicle.vehicle) {
-        // calculate the position
-        var point = this._world.latLonToPoint(vehicle.latlon);
-
-        // update the vehicle
-        vehicle.vehicle.setPosition(point.x, 0.0, point.y);
-        vehicle.vehicle.setAngle(angle);
-      }
-    }
-  }
-
-  /**
-   * Set the position of a specific vehicle
-   *
-   * @param {number} vid vehicle id
-   * @param {number} x x coordinate
-   * @param {number} y y coordinate
-   */
-  setPosition(vid, x, y, z, angle) {
-    this._setPosition(vid, x, y, z, angle);
-
-    if (this._gpuCompute) {
-      this._setPosition(vid, x, y, z, angle);
-    }
-  }
-
-  // internal helper for setPosition()
-  _setPosition(vid, x, y, z, angle) {
-    // if the vehicle exists
-    if (vid in this._vehicles) {
-      var vehicle = this._vehicles[vid];
-
-      if (vehicle.vehicle) {
-        // update the vehicle
-        vehicle.vehicle.setPosition(x, y, z);
-        vehicle.vehicle.setAngle(-angle);
-      }
-
-      // calculate and update the location
-      vehicle.latlon = this._world.pointToLatLon(new Point(x, z));
-    }
-  }
-
-  // Returns true if the polygon is flat (has no height)
-  isFlat() {
-    return this._flat;
-  }
-
-  // Returns true if coordinates refer to a single geometry
-  //
-  // For example, not coordinates for a MultiPolygon GeoJSON feature
-  static isSingle(coordinates) {
-    return !Array.isArray(coordinates[0][0][0]);
-  }
-
   destroy() {
     // Run common destruction logic from parent
     super.destroy();
   }
 
-  _setSimLocation(vid, lat, lon, angle) {
-    var point = self._world.latLonToPoint(new LatLon(lat, lon));
-    var position = {x: position.x, y: 0.0, z: position.y, angle: angle};
-
-    this._setPosition(position);
-  }
-
-  _setSimPosition(vid, x, y, z, angle) {
-    // console.log('_setSimPosition: ' + vid + ', ' + x + ', ' + y + ', ' + z + ', ' + angle + ')');
-
-    // transmit from gpu to cpu
-    var texturePosition = this._gpuCompute.readVariable(this._positionVariable, this._texturePosition);
-
-    // (for extrapolation) update data
-    texturePosition.image.data[vid * 4 + 0] = x;
-    texturePosition.image.data[vid * 4 + 1] = y;
-    texturePosition.image.data[vid * 4 + 2] = z;
-    texturePosition.image.data[vid * 4 + 3] = angle;
-    texturePosition.needsUpdate = true;
-
-    // transmit from cpu to gpu
-    this._gpuCompute.updateVariable(this._positionVariable, texturePosition);
-  }
-
-  _setSimVelocity(vid, vx, vy, vz, wheel) {
-    // transmit from gpu to cpu
-    var textureVelocity = this._gpuCompute.readVariable(this._velocityVariable, this._textureVelocity);
-
-    // update data
-    textureVelocity.image.data[vid * 4 + 0] = vx;
-    textureVelocity.image.data[vid * 4 + 1] = vy;
-    textureVelocity.image.data[vid * 4 + 2] = vz;
-    textureVelocity.image.data[vid * 4 + 3] = wheel;
-    textureVelocity.needsUpdate = true;
-
-    console.log(textureVelocity.image.data);
-
-    // transmit from cpu to gpu
-    this._gpuCompute.updateVariable(this._velocityVariable, textureVelocity);
-  }
-
-  _setSimAcceleration(vid, ax, ay, az, aw) {
-    // update data in cpu-memory
-    this._velocityUniforms.textureAcceleration.value.image.data[vid * 4 + 0] = ax;
-    this._velocityUniforms.textureAcceleration.value.image.data[vid * 4 + 1] = ay;
-    this._velocityUniforms.textureAcceleration.value.image.data[vid * 4 + 2] = az;
-    this._velocityUniforms.textureAcceleration.value.image.data[vid * 4 + 3] = aw;
-    this._velocityUniforms.textureAcceleration.value.needsUpdate = true;
-  }
-
-  //
-  // locations = {
-  //   0: {lat: 0.0, lon: 0.0, angle: 0.0},
-  //   1: {lat: 1.0, lon: 1.0, angle: 0.0},
-  //   ...
-  //   vid: {lat: lat, lon: lon, angle: angle}
-  // }
-  //
-  _setSimLocations(locations) {
-    var self = this;
-
-    var positions = {};
-    Object.keys(locations).forEach(function(vid) {
-      var point = self._world.latLonToPoint(new LatLon(locations[vid].lat, locations[vid].lon));
-      positions[vid] = {x: point.x, y: 0.0, z: point.y, angle: locations[vid].angle};
-    });
-
-    this._setSimPositions(positions);
-  }
-
-  //
-  // positions = {
-  //   0: {x: 0.0, y: 0.0, z: 0.0, angle: 0.0},
-  //   1: {x: 1.0, y: 1.0, z: 1.0, angle: 0.0},
-  //   ...
-  //   vid: {x: x, y: y, z: z, angle: angle}
-  // }
-  //
-  _setSimPositions(positions) {
-    if (this._gpuCompute) {
-      // transmit from gpu to cpu
-      var texturePosition = this._gpuCompute.readVariable(this._positionVariable, this._texturePosition);
-
-      // update data
-      Object.keys(positions).forEach(function(vid) {
-        // (for extrapolation)
-        texturePosition.image.data[vid * 4 + 0] = positions[vid].x;
-        texturePosition.image.data[vid * 4 + 1] = positions[vid].y;
-        texturePosition.image.data[vid * 4 + 2] = positions[vid].z;
-        texturePosition.image.data[vid * 4 + 3] = positions[vid].angle;
-      });
-      texturePosition.needsUpdate = true;
-
-      // transmit from cpu to gpu
-      this._gpuCompute.updateVariable(this._positionVariable, texturePosition);
-    }
-  }
-
-  //
-  // velocities = {
-  //   0: {vx: 0.0, vy: 0.0, vz: 0.0, wheel: 0.0},
-  //   1: {vx: 1.0, vy: 1.0, vz: 1.0, wheel: 0.0},
-  //   ...
-  //   vid: {vx: vx, vy: vy, vz: vz, wheel: wheel}
-  // }
-  //
-  _setSimVelocities(velocities) {
-    if (this._gpuCompute) {
-      // transmit from gpu to cpu
-      var textureVelocity = this._gpuCompute.readVariable(this._velocityVariable, this._textureVelocity);
-
-      // update data
-      Object.keys(velocities).forEach(function(vid) {
-        textureVelocity.image.data[vid * 4 + 0] = velocities[vid].vx;
-        textureVelocity.image.data[vid * 4 + 1] = velocities[vid].vy;
-        textureVelocity.image.data[vid * 4 + 2] = velocities[vid].vz;
-        textureVelocity.image.data[vid * 4 + 3] = velocities[vid].wheel;
-      });
-      textureVelocity.needsUpdate = true;
-
-      // transmit from cpu to gpu
-      this._gpuCompute.updateVariable(this._velocityVariable, textureVelocity);
-    }
-  }
-
-  _setSimAccelerations(accelerations) {
-    // TODO: implement a function to update all of the vehicles' accelerations
-  }
-
-  _debug() {
-    var texturePosition = this._gpuCompute.readVariable(this._positionVariable);
-    var textureVelocity = this._gpuCompute.readVariable(this._velocityVariable);
-
-    console.log('texturePosition:');
-    console.log(texturePosition.image.data);
-    console.log('textureVelocity:');
-    console.log(textureVelocity.image.data);
-  }
 }
 
 export default VehicleLayer;

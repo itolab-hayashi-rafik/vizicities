@@ -1,7 +1,7 @@
 // London
 // var coords = [51.505, -0.09];
 // Nitech
-var coords = [35.157236, 136.924981];
+var coords = [35.156324, 136.923108];
 
 var world = VIZI.world('world', {
   skybox: true,
@@ -12,68 +12,72 @@ var world = VIZI.world('world', {
 // world._environment._skybox.setInclination(0.3);
 world._environment._skybox.setInclination(0.1);
 
+// obtain camera
+var camera = world.getCamera();
+camera.position.set(-150, 75, 125);
+
 // Add controls
 VIZI.Controls.orbit().addTo(world);
 
 // CartoDB basemap
-VIZI.imageTileLayer('http://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}.png', {
-  attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, &copy; <a href="http://cartodb.com/attributions">CartoDB</a>'
-}).addTo(world);
+// VIZI.imageTileLayer('http://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}.png', {
+//   attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, &copy; <a href="http://cartodb.com/attributions">CartoDB</a>'
+// }).addTo(world);
 
 // Roads from Mapzen (linestrings)
-// var topoJSONRoadLayer = VIZI.topoJSONTileLayer('https://vector.mapzen.com/osm/roads/{z}/{x}/{y}.topojson?api_key=vector-tiles-NT5Emiw', {
-//   interactive: false,
-//   style: function(feature) {
-//     var width, color;
-//
-//     if (feature.properties.highway) {
-//       if (feature.properties.highway == 'major' || feature.properties.highway == 'primary') {
-//         width = 10;
-//       } else if (feature.properties.highway == 'secondary') {
-//         width = 7;
-//       } else if (feature.properties.highway == 'residental' || feature.properties.highway == 'tertiary') {
-//         width = 5;
-//       } else if (feature.properties.highway == 'living_street') {
-//         width = 3;
-//       } else if (feature.properties.highway == 'track' || feature.properties.highway == 'trunk') {
-//         width = 3;
-//       } else if (feature.properties.highway == 'footway') {
-//         width = 2;
-//       } else {
-//         // console.log(feature.properties.highway);
-//         width = 1;
-//       }
-//     } else {
-//       width = 1;
-//     }
-//
-//     if (feature.properties.kind) {
-//       if (feature.properties.kind == 'major_road') {
-//         color = '#f7c616';
-//       } else if (feature.properties.kind == 'minor_road') {
-//         color = '#888785';
-//       } else {
-//         color = '#000000';
-//       }
-//     }
-//
-//     return {
-//       height: 1,
-//       lineColor: color,
-//       lineWidth: width,
-//       // lineTransparent: true,
-//       lineOpacity: 0.2,
-//       // lineBlending: THREE.AdditiveBlending,
-//       lineBlending: THREE.NormalBlending,
-//       lineRenderOrder: 2
-//     };
-//   },
-//   filter: function(feature) {
-//     // Don't show points
-//     return feature.geometry.type !== 'Point';
-//   },
-//   attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://whosonfirst.mapzen.com#License">Who\'s On First</a>.'
-// }).addTo(world);
+var topoJSONRoadLayer = VIZI.topoJSONTileLayer('https://vector.mapzen.com/osm/roads/{z}/{x}/{y}.topojson?api_key=vector-tiles-NT5Emiw', {
+  interactive: false,
+  style: function(feature) {
+    var width, color;
+
+    if (feature.properties.highway) {
+      if (feature.properties.highway == 'major' || feature.properties.highway == 'primary') {
+        width = 10;
+      } else if (feature.properties.highway == 'secondary') {
+        width = 7;
+      } else if (feature.properties.highway == 'residental' || feature.properties.highway == 'tertiary') {
+        width = 5;
+      } else if (feature.properties.highway == 'living_street') {
+        width = 3;
+      } else if (feature.properties.highway == 'track' || feature.properties.highway == 'trunk') {
+        width = 3;
+      } else if (feature.properties.highway == 'footway') {
+        width = 2;
+      } else {
+        // console.log(feature.properties.highway);
+        width = 1;
+      }
+    } else {
+      width = 1;
+    }
+
+    if (feature.properties.kind) {
+      if (feature.properties.kind == 'major_road') {
+        color = '#f7c616';
+      } else if (feature.properties.kind == 'minor_road') {
+        color = '#888785';
+      } else {
+        color = '#000000';
+      }
+    }
+
+    return {
+      height: 1,
+      lineColor: color,
+      lineWidth: width,
+      // lineTransparent: true,
+      lineOpacity: 0.2,
+      // lineBlending: THREE.AdditiveBlending,
+      lineBlending: THREE.NormalBlending,
+      lineRenderOrder: 2
+    };
+  },
+  filter: function(feature) {
+    // Don't show points
+    return feature.geometry.type !== 'Point';
+  },
+  attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://whosonfirst.mapzen.com#License">Who\'s On First</a>.'
+}).addTo(world);
 
 // Buildings from Mapzen (polygons)
 var topoJSONBuildingLayer = VIZI.topoJSONTileLayer('https://vector.mapzen.com/osm/buildings/{z}/{x}/{y}.topojson?api_key=vector-tiles-NT5Emiw', {
@@ -132,8 +136,9 @@ for (var i = 0; i < 1; i++) {
   );
 }
 
+// sets the vehicles to move
 vehicleLayer.on('loadCompleted', function() {
-  var vehicles = vehicleLayer._vehicles;
+  var vehicles = vehicleLayer._simObjects;
   var velocities = {};
   for (var i = 0; i < vehicles.length; i++) {
     velocities[i] = {vx: 30.0, vy: 0.0, vz: 0.0, wheel: 0.1};
