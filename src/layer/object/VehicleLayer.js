@@ -213,8 +213,8 @@ class VehicleLayer extends SimObjectLayer {
 
 export default VehicleLayer;
 
-var noNew = function(coordinates, options) {
-  return new VehicleLayer(coordinates, options);
+var noNew = function(models, options) {
+  return new VehicleLayer(models, options);
 };
 
 export {noNew as vehicleLayer};
