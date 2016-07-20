@@ -101,48 +101,55 @@ class SimObjectLayer extends Layer {
   }
 
   _onWorldUpdate(delta) {
-    if (this._gpuCompute) {
-      this._performUpdate(delta);
-    }
+    this._performUpdate(delta);
+    this._performSimUpdate(delta);
   }
 
   _performUpdate(delta) {
-    var now = performance.now();
-
-    this._positionUniforms.time.value = now;
-    this._positionUniforms.delta.value = delta;
-    this._velocityUniforms.time.value = now;
-    this._velocityUniforms.delta.value = delta;
-
-    this._gpuCompute.compute();
-
-    // transfer objects' velocity parameters from gpu to cpu
-    var texturePosition = this._gpuCompute.readVariable(this._positionVariable, this._texturePosition);
-    var textureVelocity = this._gpuCompute.readVariable(this._velocityVariable, this._textureVelocity);
     for (var i = 0; i < this._simObjects.length; i++) {
-      var object = this._simObjects[i];
-
-      var x = texturePosition.image.data[i * 4 + 0];
-      var y = texturePosition.image.data[i * 4 + 1];
-      var z = texturePosition.image.data[i * 4 + 2];
-      var angle = texturePosition.image.data[i * 4 + 3];
-      var velocity = textureVelocity.image.data[i * 4 + 0];
-
-      object.setPosition(x, y, z);
-      object.setAngle(-angle);
-      object.setVelocity(velocity);
+      this._simObjects[i].update(delta);
     }
+  }
 
-    // (for gpgpu rendering (no transfer to cpu))
-    // for (var i = 0; i < this._vehicles.length; i++) {
-    //   var vehicle = this._vehicles[i];
-    //   if (vehicle.mesh) {
-    //     vehicle.mesh.material.uniforms.texturePosition.value = this._gpuCompute.getCurrentRenderTarget(this._positionVariable).texture;
-    //     if (vehicle.mesh.material.uniforms.texture) {
-    //       vehicle.mesh.material.uniforms.texture.value = this._textures[vehicle.modelName];
-    //     }
-    //   }
-    // }
+  _performSimUpdate(delta) {
+    if (this._gpuCompute) {
+      var now = performance.now();
+
+      this._positionUniforms.time.value = now;
+      this._positionUniforms.delta.value = delta;
+      this._velocityUniforms.time.value = now;
+      this._velocityUniforms.delta.value = delta;
+
+      this._gpuCompute.compute();
+
+      // transfer objects' velocity parameters from gpu to cpu
+      var texturePosition = this._gpuCompute.readVariable(this._positionVariable, this._texturePosition);
+      var textureVelocity = this._gpuCompute.readVariable(this._velocityVariable, this._textureVelocity);
+      for (var i = 0; i < this._simObjects.length; i++) {
+        var object = this._simObjects[i];
+
+        var x = texturePosition.image.data[i * 4 + 0];
+        var y = texturePosition.image.data[i * 4 + 1];
+        var z = texturePosition.image.data[i * 4 + 2];
+        var angle = texturePosition.image.data[i * 4 + 3];
+        var velocity = textureVelocity.image.data[i * 4 + 0];
+
+        object.setPosition(x, y, z);
+        object.setAngle(-angle);
+        object.setVelocity(velocity);
+      }
+
+      // (for gpgpu rendering (no transfer to cpu))
+      // for (var i = 0; i < this._vehicles.length; i++) {
+      //   var vehicle = this._vehicles[i];
+      //   if (vehicle.mesh) {
+      //     vehicle.mesh.material.uniforms.texturePosition.value = this._gpuCompute.getCurrentRenderTarget(this._positionVariable).texture;
+      //     if (vehicle.mesh.material.uniforms.texture) {
+      //       vehicle.mesh.material.uniforms.texture.value = this._textures[vehicle.modelName];
+      //     }
+      //   }
+      // }
+    }
   }
 
   /**

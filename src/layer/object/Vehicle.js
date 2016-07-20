@@ -17,7 +17,6 @@ class Vehicle extends SimObject {
     // properties
     this.wheelAngle           = 0.0;
     this.wheelDiameter        = 1.0;
-    this.updatePosition       = true;
     this.updateWheel          = true;
 
     // 3D Object

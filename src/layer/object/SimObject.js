@@ -13,7 +13,7 @@ class SimObject {
     this.id                   = undefined;
     this.angle                = 0.0;
     this.velocity             = 0.0;
-    this.updatePosition       = true;
+    this.updatePosition       = false;
 
     // 3D Object
     this.root                 = new THREE.Object3D();
