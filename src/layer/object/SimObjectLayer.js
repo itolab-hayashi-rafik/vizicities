@@ -79,7 +79,7 @@ class SimObjectLayer extends Layer {
     simObject.id = (total - 1);
 
     // enable cpu update if necessary
-    // simObject.updatePosition = !this._options.enableGpuComputation; // FIXME: this should be enabled
+    simObject.updatePosition = !this._options.enableGpuComputation; // FIXME: this should be enabled
 
     // add Object3D to the layer
     super.add(simObject.root);
