@@ -79,10 +79,13 @@ class SimObjectLayer extends Layer {
     simObject.id = (total - 1);
 
     // enable cpu update if necessary
-    // simObject.updatePosition = !this._options.enableGpuComputation;
+    // simObject.updatePosition = !this._options.enableGpuComputation; // FIXME: this should be enabled
 
     // add Object3D to the layer
     super.add(simObject.root);
+
+    // add CSS2DObject to the DOM2D layer
+    super.addDOM2D(simObject.label);
   }
 
   // remove SimObject
@@ -352,6 +355,38 @@ class SimObjectLayer extends Layer {
 
   _setSimAccelerations(accelerations) {
     // TODO: implement a function to update all of the vehicles' accelerations
+  }
+
+  /**
+   * Set the label class
+   *
+   * @param {number} id
+   * @param {string} className
+   */
+  setLabelClass(id, className) {
+    // if the vehicle exists
+    if (id in this._simObjects) {
+      var simObject = this._simObjects[id];
+
+      // update the text
+      simObject.setLabelClass(className);
+    }
+  }
+
+  /**
+   * Set the label text
+   *
+   * @param {number} id
+   * @param {string} text
+   */
+  setLabelText(id, text) {
+    // if the vehicle exists
+    if (id in this._simObjects) {
+      var simObject = this._simObjects[id];
+
+      // update the text
+      simObject.setLabelText(text);
+    }
   }
 
   _debug() {

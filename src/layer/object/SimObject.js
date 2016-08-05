@@ -15,7 +15,10 @@ class SimObject {
     this.updatePosition       = false;
 
     // 3D Object
-    this.root                 = new THREE.Object3D();
+    this.root                 = undefined;
+
+    // 2D Object
+    this.label                = undefined;
 
     // --- construct
     this._createSimObject();
@@ -47,6 +50,7 @@ class SimObject {
    */
   setPosition(x, y, z) {
     this.root.position.set(x, y, z);
+    this.label.position.copy(this.root.position);
   }
 
   /**
@@ -64,6 +68,22 @@ class SimObject {
    */
   setVelocity(velocity) {
     this.velocity = velocity;
+  }
+
+  /**
+   * sets the label class
+   * @param className
+   */
+  setLabelClass(className) {
+    this.label.element.className = className;
+  }
+
+  /**
+   * sets the label text
+   * @param text
+   */
+  setLabelText(text) {
+    this.label.element.textContent = text;
   }
 
   /**
@@ -87,6 +107,13 @@ class SimObject {
   // --- internal helper methods
   _createSimObject() {
     // construct this object
+
+    // root
+    this.root = new THREE.Object3D();
+
+    // label
+    var text = document.createElement('div');
+    this.label = new THREE.CSS2DObject(text);
   }
   // ---
 
