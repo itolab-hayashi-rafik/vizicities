@@ -18744,14 +18744,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	      var entry = {
 	        id: undefined,
 	        modelName: modelName,
+	        latlon: latlon,
+	        angle: angle,
 	        options: options,
-	        pedestrian: null,
-	        setLocation: function setLocation(lat, lon, angle) {
-	          self.setLocation(this.pedestrian.id, lat, lon, angle);
-	        },
-	        setPosition: function setPosition(x, y, z, angle) {
-	          self.setPosition(this.pedestrian.id, x, y, z, angle);
-	        }
+	        pedestrian: null
 	      };
 	      var total = this._entries.push(entry);
 	      entry.id = total - 1;
@@ -18766,11 +18762,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	    value: function _addPedestrianInternal(entry) {
 	      if (this._modelsLoaded) {
 	
+	        // instantiate the pedestrian
 	        var pedestrianModel = _ModelRepository2['default'].get(MODEL_PREFIX + entry.modelName);
 	        var pedestrian = new _Pedestrian2['default'](pedestrianModel);
-	        this.add(pedestrian);
 	
+	        // add the pedestrian to the layer
+	        this.add(pedestrian);
 	        entry.pedestrian = pedestrian;
+	
+	        // set the pedestrian's location
+	        this.setLocation(entry.id, entry.latlon.lat, entry.latlon.lon, entry.angle);
 	      }
 	    }
 	  }, {
@@ -18875,6 +18876,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var defaults = {
 	      output: true,
 	      // simulation:
+	      enableGpuComputation: false,
 	      simWidth: 2
 	    };
 	
@@ -18931,9 +18933,18 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }, {
 	    key: 'add',
 	    value: function add(simObject) {
+	      // push to the array
 	      var total = this._simObjects.push(simObject);
 	      simObject.id = total - 1;
+	
+	      // enable cpu update if necessary
+	      // simObject.updatePosition = !this._options.enableGpuComputation; // FIXME: this should be enabled
+	
+	      // add Object3D to the layer
 	      _get(Object.getPrototypeOf(SimObjectLayer.prototype), 'add', this).call(this, simObject.root);
+	
+	      // add CSS2DObject to the DOM2D layer
+	      _get(Object.getPrototypeOf(SimObjectLayer.prototype), 'addDOM2D', this).call(this, simObject.label);
 	    }
 	
 	    // remove SimObject
@@ -18951,8 +18962,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	      var self = this;
 	
 	      if (this.isOutput()) {
-	        // initialize GPUComputationRenderer
-	        this._initComputeRenderer(world);
+	        if (this._options.enableGpuComputation) {
+	          // initialize GPUComputationRenderer
+	          this._initComputeRenderer(world);
+	        }
 	
 	        // add listener
 	        world.on('preUpdate', function (delta) {
@@ -18977,6 +18990,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	    key: '_performSimUpdate',
 	    value: function _performSimUpdate(delta) {
 	      if (this._gpuCompute) {
+	        console.log('_performSimUpdate');
+	
 	        var now = performance.now();
 	
 	        this._positionUniforms.time.value = now;
@@ -19062,9 +19077,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }, {
 	    key: '_setSimPosition',
 	    value: function _setSimPosition(id, x, y, z, angle) {
-	      console.log('_setSimPosition: ' + id + ', ' + x + ', ' + y + ', ' + z + ', ' + angle + ')');
-	
 	      if (this._gpuCompute) {
+	        console.log('_setSimPosition: ' + id + ', ' + x + ', ' + y + ', ' + z + ', ' + angle + ')');
+	
 	        // transmit from gpu to cpu
 	        var texturePosition = this._gpuCompute.readVariable(this._positionVariable, this._texturePosition);
 	
@@ -19109,9 +19124,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }, {
 	    key: '_setSimVelocity',
 	    value: function _setSimVelocity(id, vx, vy, vz, wheel) {
-	      console.log('_setSimVelocity: ' + id + ', ' + vx + ', ' + vy + ', ' + vz + ', ' + wheel + ')');
-	
 	      if (this._gpuCompute) {
+	        console.log('_setSimVelocity: ' + id + ', ' + vx + ', ' + vy + ', ' + vz + ', ' + wheel + ')');
+	
 	        // transmit from gpu to cpu
 	        var textureVelocity = this._gpuCompute.readVariable(this._velocityVariable, this._textureVelocity);
 	
@@ -19221,8 +19236,44 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 	  }, {
 	    key: '_setSimAccelerations',
-	    value: function _setSimAccelerations(accelerations) {
-	      // TODO: implement a function to update all of the vehicles' accelerations
+	    value: function _setSimAccelerations(accelerations) {}
+	    // TODO: implement a function to update all of the vehicles' accelerations
+	
+	    /**
+	     * Set the label class
+	     *
+	     * @param {number} id
+	     * @param {string} className
+	     */
+	
+	  }, {
+	    key: 'setLabelClass',
+	    value: function setLabelClass(id, className) {
+	      // if the vehicle exists
+	      if (id in this._simObjects) {
+	        var simObject = this._simObjects[id];
+	
+	        // update the text
+	        simObject.setLabelClass(className);
+	      }
+	    }
+	
+	    /**
+	     * Set the label text
+	     *
+	     * @param {number} id
+	     * @param {string} text
+	     */
+	  }, {
+	    key: 'setLabelText',
+	    value: function setLabelText(id, text) {
+	      // if the vehicle exists
+	      if (id in this._simObjects) {
+	        var simObject = this._simObjects[id];
+	
+	        // update the text
+	        simObject.setLabelText(text);
+	      }
 	    }
 	  }, {
 	    key: '_debug',
@@ -19671,13 +19722,13 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 80 */
 /***/ function(module, exports) {
 
-	Object.defineProperty(exports, "__esModule", {
+	Object.defineProperty(exports, '__esModule', {
 	  value: true
 	});
 	
-	var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+	var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
 	
-	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 	
 	// jscs:disable
 	/* eslint-disable */
@@ -19697,7 +19748,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	    this.updatePosition = false;
 	
 	    // 3D Object
-	    this.root = new THREE.Object3D();
+	    this.root = undefined;
+	
+	    // 2D Object
+	    this.label = undefined;
 	
 	    // --- construct
 	    this._createSimObject();
@@ -19710,7 +19764,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	   */
 	
 	  _createClass(SimObject, [{
-	    key: "add",
+	    key: 'add',
 	    value: function add(object) {
 	      this.root.add(object);
 	    }
@@ -19720,7 +19774,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	     * @param {object} object
 	     */
 	  }, {
-	    key: "remove",
+	    key: 'remove',
 	    value: function remove(object) {
 	      this.root.remove(object);
 	    }
@@ -19732,9 +19786,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	     * @param {Number} z z
 	     */
 	  }, {
-	    key: "setPosition",
+	    key: 'setPosition',
 	    value: function setPosition(x, y, z) {
 	      this.root.position.set(x, y, z);
+	      this.label.position.copy(this.root.position);
 	    }
 	
 	    /**
@@ -19742,7 +19797,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	     * @param {Number} angle angle in [rad]
 	     */
 	  }, {
-	    key: "setAngle",
+	    key: 'setAngle',
 	    value: function setAngle(angle) {
 	      this.angle = angle;
 	      this.root.rotation.y = angle;
@@ -19753,9 +19808,29 @@ return /******/ (function(modules) { // webpackBootstrap
 	     * @param {Number} velocity velocity in [m/s]
 	     */
 	  }, {
-	    key: "setVelocity",
+	    key: 'setVelocity',
 	    value: function setVelocity(velocity) {
 	      this.velocity = velocity;
+	    }
+	
+	    /**
+	     * sets the label class
+	     * @param className
+	     */
+	  }, {
+	    key: 'setLabelClass',
+	    value: function setLabelClass(className) {
+	      this.label.element.className = className;
+	    }
+	
+	    /**
+	     * sets the label text
+	     * @param text
+	     */
+	  }, {
+	    key: 'setLabelText',
+	    value: function setLabelText(text) {
+	      this.label.element.textContent = text;
 	    }
 	
 	    /**
@@ -19763,7 +19838,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	     * @param {Number} delta
 	     */
 	  }, {
-	    key: "update",
+	    key: 'update',
 	    value: function update(delta) {
 	
 	      var forwardDelta = delta * this.velocity;
@@ -19779,9 +19854,17 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	    // --- internal helper methods
 	  }, {
-	    key: "_createSimObject",
-	    value: function _createSimObject() {}
-	    // construct this object
+	    key: '_createSimObject',
+	    value: function _createSimObject() {
+	      // construct this object
+	
+	      // root
+	      this.root = new THREE.Object3D();
+	
+	      // label
+	      var text = document.createElement('div');
+	      this.label = new THREE.CSS2DObject(text);
+	    }
 	
 	    // ---
 	
@@ -19790,8 +19873,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return SimObject;
 	})();
 	
-	exports["default"] = SimObject;
-	module.exports = exports["default"];
+	exports['default'] = SimObject;
+	module.exports = exports['default'];
 
 /***/ },
 /* 81 */
@@ -21121,14 +21204,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	      var entry = {
 	        id: undefined,
 	        modelName: modelName,
+	        latlon: latlon,
+	        angle: angle,
 	        options: options,
-	        vehicle: null,
-	        setLocation: function setLocation(lat, lon, angle) {
-	          self.setLocation(this.vehicle.id, lat, lon, angle);
-	        },
-	        setPosition: function setPosition(x, y, z, angle) {
-	          self.setPosition(this.vehicle.id, x, y, z, angle);
-	        }
+	        vehicle: null
 	      };
 	      var total = this._entries.push(entry);
 	      entry.id = total - 1;
@@ -21143,11 +21222,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	    value: function _addVehicleInternal(entry) {
 	      if (this._modelsLoaded) {
 	
+	        // instantiate the vehicle
 	        var vehicleModel = _ModelRepository2['default'].get(MODEL_PREFIX + entry.modelName);
 	        var vehicle = new _Vehicle2['default'](vehicleModel);
-	        this.add(vehicle);
 	
+	        // add the vehicle to the layer
+	        this.add(vehicle);
 	        entry.vehicle = vehicle;
+	
+	        // set the vehicle's location
+	        this.setLocation(entry.id, entry.latlon.lat, entry.latlon.lon, entry.angle);
 	
 	        // var id = vehicle.id;
 	        //
