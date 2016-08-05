@@ -21,6 +21,7 @@ class SimObjectLayer extends Layer {
     var defaults = {
       output: true,
       // simulation:
+      enableGpuComputation: false,
       simWidth: 2
     };
 
@@ -73,8 +74,14 @@ class SimObjectLayer extends Layer {
 
   // add SimObject
   add(simObject) {
+    // push to the array
     var total = this._simObjects.push(simObject);
     simObject.id = (total - 1);
+
+    // enable cpu update if necessary
+    // simObject.updatePosition = !this._options.enableGpuComputation;
+
+    // add Object3D to the layer
     super.add(simObject.root);
   }
 
@@ -90,8 +97,10 @@ class SimObjectLayer extends Layer {
     var self = this;
 
     if (this.isOutput()) {
-      // initialize GPUComputationRenderer
-      this._initComputeRenderer(world);
+      if (this._options.enableGpuComputation) {
+        // initialize GPUComputationRenderer
+        this._initComputeRenderer(world);
+      }
 
       // add listener
       world.on('preUpdate', (delta) => {
@@ -113,6 +122,8 @@ class SimObjectLayer extends Layer {
 
   _performSimUpdate(delta) {
     if (this._gpuCompute) {
+      console.log('_performSimUpdate');
+
       var now = performance.now();
 
       this._positionUniforms.time.value = now;
@@ -192,9 +203,9 @@ class SimObjectLayer extends Layer {
   }
 
   _setSimPosition(id, x, y, z, angle) {
-    console.log('_setSimPosition: ' + id + ', ' + x + ', ' + y + ', ' + z + ', ' + angle + ')');
-
     if (this._gpuCompute) {
+      console.log('_setSimPosition: ' + id + ', ' + x + ', ' + y + ', ' + z + ', ' + angle + ')');
+
       // transmit from gpu to cpu
       var texturePosition = this._gpuCompute.readVariable(this._positionVariable, this._texturePosition);
 
@@ -235,9 +246,9 @@ class SimObjectLayer extends Layer {
   }
 
   _setSimVelocity(id, vx, vy, vz, wheel) {
-    console.log('_setSimVelocity: ' + id + ', ' + vx + ', ' + vy + ', ' + vz + ', ' + wheel + ')');
-
     if (this._gpuCompute) {
+      console.log('_setSimVelocity: ' + id + ', ' + vx + ', ' + vy + ', ' + vz + ', ' + wheel + ')');
+
       // transmit from gpu to cpu
       var textureVelocity = this._gpuCompute.readVariable(this._velocityVariable, this._textureVelocity);
 

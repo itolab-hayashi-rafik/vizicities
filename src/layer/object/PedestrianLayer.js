@@ -116,14 +116,10 @@ class PedestrianLayer extends SimObjectLayer {
     var entry = {
       id: undefined,
       modelName: modelName,
+      latlon: latlon,
+      angle: angle,
       options: options,
-      pedestrian: null,
-      setLocation: function(lat, lon, angle) {
-        self.setLocation(this.pedestrian.id, lat, lon, angle);
-      },
-      setPosition: function(x, y, z, angle) {
-        self.setPosition(this.pedestrian.id, x, y, z, angle);
-      }
+      pedestrian: null
     };
     var total = this._entries.push(entry);
     entry.id = (total - 1);
@@ -137,12 +133,16 @@ class PedestrianLayer extends SimObjectLayer {
   _addPedestrianInternal(entry) {
     if (this._modelsLoaded) {
 
+      // instantiate the pedestrian
       var pedestrianModel = modelRepository.get(MODEL_PREFIX + entry.modelName);
       var pedestrian = new Pedestrian(pedestrianModel);
-      this.add(pedestrian);
 
+      // add the pedestrian to the layer
+      this.add(pedestrian);
       entry.pedestrian = pedestrian;
 
+      // set the pedestrian's location
+      this.setLocation(entry.id, entry.latlon.lat, entry.latlon.lon, entry.angle);
     }
   }
 

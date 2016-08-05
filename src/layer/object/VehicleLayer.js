@@ -147,14 +147,10 @@ class VehicleLayer extends SimObjectLayer {
     var entry = {
       id: undefined,
       modelName: modelName,
+      latlon: latlon,
+      angle: angle,
       options: options,
-      vehicle: null,
-      setLocation: function(lat, lon, angle) {
-        self.setLocation(this.vehicle.id, lat, lon, angle);
-      },
-      setPosition: function(x, y, z, angle) {
-        self.setPosition(this.vehicle.id, x, y, z, angle);
-      }
+      vehicle: null
     };
     var total = this._entries.push(entry);
     entry.id = (total - 1);
@@ -168,11 +164,16 @@ class VehicleLayer extends SimObjectLayer {
   _addVehicleInternal(entry) {
     if (this._modelsLoaded) {
 
+      // instantiate the vehicle
       var vehicleModel = modelRepository.get(MODEL_PREFIX + entry.modelName);
       var vehicle = new Vehicle(vehicleModel);
-      this.add(vehicle);
 
+      // add the vehicle to the layer
+      this.add(vehicle);
       entry.vehicle = vehicle;
+
+      // set the vehicle's location
+      this.setLocation(entry.id, entry.latlon.lat, entry.latlon.lon, entry.angle);
 
       // var id = vehicle.id;
       //
