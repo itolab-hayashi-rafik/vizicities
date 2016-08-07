@@ -79,19 +79,25 @@ class SimObjectLayer extends Layer {
     simObject.id = (total - 1);
 
     // enable cpu update if necessary
-    simObject.updatePosition = !this._options.enableGpuComputation; // FIXME: this should be enabled
+    simObject.updatePosition = !this._options.enableGpuComputation;
 
     // add Object3D to the layer
     super.add(simObject.root);
 
     // add CSS2DObject to the DOM2D layer
-    super.addDOM2D(simObject.label);
+    this.addDOM2D(simObject.label);
   }
 
   // remove SimObject
   remove(simObject) {
+    // remove from the array
     this._simObjects.splice(this._simObjects.indexOf(simObject), 1);
+
+    // remove Object3D from the layer
     super.remove(simObject.root);
+
+    // remove CSS2DObject from the DOM2D layer
+    this.removeDOM2D(simObject.label);
   }
 
   _onAdd(world) {
