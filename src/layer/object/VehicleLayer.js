@@ -205,6 +205,16 @@ class VehicleLayer extends SimObjectLayer {
     }
   }
 
+  _setVelocity(id, vx, vy, vz, wheel) {
+    super._setVelocity(id, vx, vy, vz, wheel);
+
+    // if the vehicle exists
+    if (id in this._simObjects) {
+      var simObject = this._simObjects[id];
+      simObject.setWheelAngle(wheel);
+    }
+  }
+
   destroy() {
     // Run common destruction logic from parent
     super.destroy();

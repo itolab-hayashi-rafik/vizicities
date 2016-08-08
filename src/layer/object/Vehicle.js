@@ -31,7 +31,7 @@ class Vehicle extends SimObject {
     this.rearRightWheelMesh   = null;
 
     // --- constants
-    this.STEERING_RADIUS_RATIO = 0.0023;
+    this.STEERING_RADIUS_RATIO = 0.0023 / vehicleModel.scale;
 
     // --- make a vehicle
     this._createVehicle();
@@ -43,7 +43,7 @@ class Vehicle extends SimObject {
    * @param wheelAngle angle in [rad]
    */
   setWheelAngle(wheelAngle) {
-    wheelAngle = wheelAngle;
+    this.wheelAngle = wheelAngle;
 
     this.frontLeftWheelRoot.rotation.y = wheelAngle;
     this.frontRightWheelRoot.rotation.y = wheelAngle;

@@ -131,8 +131,6 @@ class SimObjectLayer extends Layer {
 
   _performSimUpdate(delta) {
     if (this._gpuCompute) {
-      console.log('_performSimUpdate');
-
       var now = performance.now();
 
       this._positionUniforms.time.value = now;
@@ -250,7 +248,7 @@ class SimObjectLayer extends Layer {
       var simObject = this._simObjects[id];
 
       // update the vehicle
-      simObject.setVelocity(vx); // FIXME: use vy, vz, wheel?
+      simObject.setVelocity(vx); // TODO: use vy, vz?
     }
   }
 

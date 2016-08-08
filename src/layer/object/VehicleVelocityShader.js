@@ -41,7 +41,7 @@ var VehicleVelocityShader = {
     " float acceleration = selfAcceleration.x;",
 
     " // update velocity",
-    " //velocity += acceleration;",
+    " velocity += acceleration;",
 
     " gl_FragColor = vec4(velocity, 0.0, 0.0, wheel);",
 
