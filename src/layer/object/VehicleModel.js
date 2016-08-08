@@ -51,12 +51,16 @@ var VehicleModel = function(parameters, callback) {
 
   // internal helper methods
   function createBody(geometry, materials) {
+    geometry.sortFacesByMaterialIndex();
+
     scope.bodyGeometry = geometry;
     scope.bodyMaterials = materials;
 
     onCreated();
   }
   function createWheel(geometry, materials) {
+    geometry.sortFacesByMaterialIndex();
+
     scope.wheelGeometry = geometry;
     scope.wheelMaterials = materials;
 
