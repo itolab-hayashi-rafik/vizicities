@@ -74,14 +74,13 @@ class Vehicle extends SimObject {
 
     // wheels rolling
     if (this.updateWheel) {
-      var angularSpeedRatio = 1 / ( this.modelScale * ( this.wheelDiameter / 2 ) );
+      var angularSpeedRatio = 1 / ( this.model.scale * ( this.wheelDiameter / 2. ) );
       var wheelDelta = forwardDelta * angularSpeedRatio;
-      if ( this.loaded ) {
-        this.frontLeftWheelMesh.rotation.x += wheelDelta;
-        this.frontRightWheelMesh.rotation.x += wheelDelta;
-        this.backLeftWheelMesh.rotation.x += wheelDelta;
-        this.backRightWheelMesh.rotation.x += wheelDelta;
-      }
+
+      this.frontLeftWheelMesh.rotation.x += wheelDelta;
+      this.frontRightWheelMesh.rotation.x += wheelDelta;
+      this.rearLeftWheelMesh.rotation.x += wheelDelta;
+      this.rearRightWheelMesh.rotation.x += wheelDelta;
     }
 
   }
