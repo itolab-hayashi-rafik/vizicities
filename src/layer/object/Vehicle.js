@@ -113,6 +113,10 @@ class Vehicle extends SimObject {
       // setup combined materials
       var bodyFaceMaterial = new THREE.MultiMaterial(bodyMaterials);
       var wheelFaceMaterial = new THREE.MultiMaterial(wheelMaterials);
+      // var bodyFaceMaterial = new THREE.MeshFaceMaterial(bodyMaterials);
+      // var wheelFaceMaterial = new THREE.MeshFaceMaterial(wheelMaterials);
+      // var bodyFaceMaterial = new THREE.MeshPhongMaterial({ color: 0x00000bb });
+      // var wheelFaceMaterial = new THREE.MeshPhongMaterial({ color: 0x333333 });
 
       // create body mesh
       this.bodyMesh = new THREE.Mesh(bodyGeometry, bodyFaceMaterial);

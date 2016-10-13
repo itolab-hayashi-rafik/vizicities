@@ -8,6 +8,7 @@ import THREE from 'three';
 
 export default function(container) {
   var camera = new THREE.PerspectiveCamera(45, 1, 1, 2000000);
+  // var camera = new THREE.PerspectiveCamera(45, 1, 1, 10000);
   camera.position.y = 4000;
   camera.position.z = 4000;
 

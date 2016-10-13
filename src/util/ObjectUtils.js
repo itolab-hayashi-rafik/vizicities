@@ -3,6 +3,9 @@
  */
 
 import THREE from 'three';
+import operative from 'operative';
+import SimplifyModifier from '../vendor/SimplifyModifier';
+import WorkerUtils from './WorkerUtils';
 
 var ObjectUtils = (function() {
 
@@ -33,8 +36,66 @@ var ObjectUtils = (function() {
     geometry.uvsNeedUpdate = true;
   };
 
+  var objectToGeometry = function(geometry) {
+    var newGeo = new THREE.Geometry();
+
+    for (i = 0; i < geometry.vertices.length; i++) {
+      var v = geometry.vertices[i];
+      newGeo.vertices.push(new THREE.Vector3(v.x, v.y, v.z));
+    }
+    for (i = 0; i < geometry.faces.length; i++) {
+      var f = geometry.faces[i];
+      newGeo.faces.push(new THREE.Face3(f.a, f.b, f.c, f.normal, f.color, f.materialIndex));
+    }
+
+    return newGeo;
+  };
+
+  // Reduce vertices and simplify a geometry
+  var simplifyGeometry = function(geometry, reduceCount, callback) {
+
+    reduceCount = reduceCount | geometry.vertices.length * 0.5;
+    var func = operative(function(geometry, reduceCount, cb) {
+      // NOTE these codes run on a webworker thread, so all of the variables outside this scope are unavailable.
+
+      // hack
+      console.assert = function(b) {
+        if (!b) { throw new Error('assertion failed'); }
+      };
+
+      // deferred
+      var d = this.deferred();
+
+      // convert "[Object object]" to "[THREE.Geometry]"
+      geometry = VIZI.Util.ObjectUtils.objectToGeometry(geometry);
+
+      // modify the geometry
+      var modifier = new VIZI.Util.ObjectUtils.SimplifyModifier();
+      var geometry = modifier.modify(geometry, reduceCount | 0);
+
+      // return to the main thread
+      cb(geometry);
+    }, WorkerUtils.getDependencies());
+
+    // call the webworker procedure from the main thread
+    func(geometry, reduceCount, function(geometry) {
+      // callback called on the main thread
+
+      // convert "[Object object]" to "[THREE.Geometry]"
+      geometry = objectToGeometry(geometry);
+
+      // callback to the function caller
+      if (callback) {
+        callback(geometry);
+      }
+    });
+  };
+
   return {
-    createUV: createUV
+    createUV: createUV,
+    objectToGeometry: objectToGeometry,
+    simplifyGeometry: simplifyGeometry,
+    SimplifyModifier: SimplifyModifier
   };
 })();
 

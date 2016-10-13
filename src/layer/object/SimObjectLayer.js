@@ -20,6 +20,7 @@ class SimObjectLayer extends Layer {
   constructor(options) {
     var defaults = {
       output: true,
+      dynamic: true, // indicates if each object needs to be updated in every frame update
       // simulation:
       enableGpuComputation: false,
       simWidth: 2
@@ -79,7 +80,7 @@ class SimObjectLayer extends Layer {
     simObject.id = (total - 1);
 
     // enable cpu update if necessary
-    simObject.updatePosition = !this._options.enableGpuComputation;
+    simObject.updatePosition = this._options.dynamic && !this._options.enableGpuComputation;
 
     // add Object3D to the layer
     super.add(simObject.root);

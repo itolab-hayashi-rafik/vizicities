@@ -4,6 +4,7 @@
 
 import THREE from 'three';
 import BinaryLoader from '../../vendor/BinaryLoader';
+import ObjectUtils from '../../util/ObjectUtils';
 
 var VehicleModel = function(parameters, callback) {
 
@@ -52,6 +53,7 @@ var VehicleModel = function(parameters, callback) {
   // internal helper methods
   function createBody(geometry, materials) {
     geometry.sortFacesByMaterialIndex();
+    geometry.computeVertexNormals();
 
     scope.bodyGeometry = geometry;
     scope.bodyMaterials = materials;
@@ -60,6 +62,7 @@ var VehicleModel = function(parameters, callback) {
   }
   function createWheel(geometry, materials) {
     geometry.sortFacesByMaterialIndex();
+    geometry.computeVertexNormals();
 
     scope.wheelGeometry = geometry;
     scope.wheelMaterials = materials;
