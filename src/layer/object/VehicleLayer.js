@@ -205,6 +205,13 @@ class VehicleLayer extends SimObjectLayer {
     }
   }
 
+  getVehicle(id) {
+    if (id in this._entries) {
+      return this._entries[id];
+    }
+    return null;
+  }
+
   _setVelocity(id, vx, vy, vz, wheel) {
     super._setVelocity(id, vx, vy, vz, wheel);
 

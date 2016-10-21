@@ -146,6 +146,13 @@ class PedestrianLayer extends SimObjectLayer {
     }
   }
 
+  getPedestrian(id) {
+    if (id in this._entries) {
+      return this._entries[id];
+    }
+    return null;
+  }
+
   destroy() {
     // Run common destruction logic from parent
     super.destroy();
