@@ -112,6 +112,14 @@ class SimObject {
     // root
     this.root = new THREE.Object3D();
 
+    // [DEBUG] arrow
+    var from = new THREE.Vector3(0,0,0);
+    var to = new THREE.Vector3(100,0,0);
+    var direction = to.clone().sub(from);
+    var length = direction.length();
+    var arrowHelper = new THREE.ArrowHelper(direction.normalize(), from, length, 0xff0000);
+    this.root.add(arrowHelper);
+
     // label
     var text = document.createElement('div');
     this.label = new THREE.CSS2DObject(text);
