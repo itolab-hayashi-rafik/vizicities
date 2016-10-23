@@ -66,6 +66,8 @@ class Orbit extends EventEmitter {
     // Animation time in seconds
     var animationTime = duration || 2;
 
+    var self = this;
+
     this._flyTarget = new THREE.Vector3(point.x, 0, point.y);
 
     // Calculate delta from current position to fly target
@@ -108,7 +110,7 @@ class Orbit extends EventEmitter {
         },
         onComplete: function(tween) {
           // console.log(`Arrived at flyTarget`);
-          this._flyTarget = null;
+          self._flyTarget = null;
         },
         onUpdateParams: ['{self}'],
         onCompleteParams: ['{self}'],
