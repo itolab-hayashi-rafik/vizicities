@@ -23,6 +23,10 @@ const mainFile = manifest.main;
 const destinationFolder = path.dirname(mainFile);
 const exportFileName = path.basename(mainFile, path.extname(mainFile));
 
+// additional configurations by Masayuki (2016-07-07)
+const destinationFolder2 = '../Simultra/Server/public/vendor';
+const destinationFolder3 = '../Simultra/GoServer/public/vendor';
+
 // Remove a directory
 function _clean(dir, done) {
   del([dir], done);
@@ -48,7 +52,8 @@ function lint(files) {
     .pipe($.eslint.format())
     .pipe($.eslint.failOnError())
     .pipe($.jscs())
-    .pipe($.jscs.reporter('fail'))
+    // .pipe($.jscs.reporter('fail')) // do not show where the errors are
+    .pipe($.jscs.reporter())
     .on('error', onError);
 }
 
@@ -85,7 +90,9 @@ function build() {
         // Proxy the global THREE variable to require('TimelineMax')
         'TimelineMax': 'TimelineMax',
         // Proxy the global proj4 variable to require('proj4')
-        'proj4': 'proj4'
+        'proj4': 'proj4',
+        // Proxy the global operative variable to require('operative')
+        'operative': 'operative'
       },
       module: {
         loaders: [
@@ -95,6 +102,8 @@ function build() {
       devtool: 'source-map'
     }))
     .pipe(gulp.dest(destinationFolder))
+    .pipe(gulp.dest(destinationFolder2))
+    .pipe(gulp.dest(destinationFolder3))
     .pipe($.filter(['*', '!**/*.js.map']))
     .pipe($.rename(exportFileName + '.min.js'))
     .pipe($.sourcemaps.init({ loadMaps: true }))
@@ -109,12 +118,58 @@ function build() {
 
     .pipe($.sourcemaps.write('./'))
     .pipe(gulp.dest(destinationFolder))
+    .pipe(gulp.dest(destinationFolder2))
+    .pipe(gulp.dest(destinationFolder3))
+    .pipe($.livereload());
+}
+
+function buildWorker() {
+  return gulp.src(path.join('src', config.entryFileName + '-worker.js'))
+    .pipe($.plumber())
+    .pipe(webpackStream({
+      output: {
+        filename: exportFileName + '-worker.js',
+        libraryTarget: 'umd',
+        library: config.mainVarName
+      },
+      externals: {
+        // Proxy the global THREE variable to require('three')
+        'three': 'THREE'
+      },
+      module: {
+        loaders: [
+          { test: /\.js$/, exclude: /node_modules/, loader: 'babel-loader' }
+        ]
+      },
+      devtool: 'source-map'
+    }))
+    .pipe(gulp.dest(destinationFolder))
+    .pipe(gulp.dest(destinationFolder2))
+    .pipe(gulp.dest(destinationFolder3))
+    .pipe($.filter(['*', '!**/*.js.map']))
+    .pipe($.rename(exportFileName + '-worker.min.js'))
+    .pipe($.sourcemaps.init({ loadMaps: true }))
+
+    // Don't mangle class names so we can use them in the console
+    // jscs:disable
+    // .pipe($.uglify({ mangle: { keep_fnames: true }}))
+    // jscs:enable
+
+    // Using the mangle option above breaks the sourcemap for some reason
+    .pipe($.uglify())
+
+    .pipe($.sourcemaps.write('./'))
+    .pipe(gulp.dest(destinationFolder))
+    .pipe(gulp.dest(destinationFolder2))
+    .pipe(gulp.dest(destinationFolder3))
     .pipe($.livereload());
 }
 
 function moveCSS() {
   return gulp.src(path.join('src', config.entryFileName + '.css'))
-    .pipe(gulp.dest(destinationFolder));
+    .pipe(gulp.dest(destinationFolder))
+    .pipe(gulp.dest(destinationFolder2))
+    .pipe(gulp.dest(destinationFolder3));
 }
 
 function _mocha() {
@@ -239,6 +294,9 @@ gulp.task('move-css', ['clean'], moveCSS);
 
 // Build two versions of the library
 gulp.task('build', ['lint', 'move-css'], build);
+
+// Build worker library
+gulp.task('build-worker', ['lint'], buildWorker);
 
 // Lint and run our tests
 gulp.task('test', ['lint'], test);
