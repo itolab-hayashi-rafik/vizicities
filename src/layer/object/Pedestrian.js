@@ -73,6 +73,9 @@ class Pedestrian extends SimObject {
       // finish
       this.add(root);
 
+      // adjust the label
+      this._adjustLabelOffset();
+
       // callback
       if (this.callback) {
         this.callback(self);

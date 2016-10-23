@@ -4,6 +4,7 @@
 /**
  * Created by masayuki on 20/07/2016.
  */
+import THREE from 'three';
 
 class SimObject {
   constructor() {
@@ -19,6 +20,7 @@ class SimObject {
 
     // 2D Object
     this.label                = undefined;
+    this.labelOffset          = new THREE.Vector3();
 
     // --- construct
     this._createSimObject();
@@ -50,7 +52,7 @@ class SimObject {
    */
   setPosition(x, y, z) {
     this.root.position.set(x, y, z);
-    this.label.position.copy(this.root.position);
+    this.label.position.copy(this.root.position).add(this.labelOffset);
   }
 
   /**
@@ -87,6 +89,17 @@ class SimObject {
   }
 
   /**
+   * sets the label offset
+   *
+   * @param {Number} x x
+   * @param {Number} y y
+   * @param {Number} z z
+   */
+  setLabelOffset(x, y, z) {
+    this.labelOffset.set(x, y, z);
+  }
+
+  /**
    * update the object
    * @param {Number} delta
    */
@@ -98,7 +111,7 @@ class SimObject {
     if (this.updatePosition) {
       this.root.position.x += Math.cos( -this.angle ) * forwardDelta;
       this.root.position.z += Math.sin( -this.angle ) * forwardDelta;
-      this.label.position.copy(this.root.position);
+      this.label.position.copy(this.root.position).add(this.labelOffset);
 
       this.root.rotation.y = this.angle;
     }
@@ -114,7 +127,7 @@ class SimObject {
 
     // [DEBUG] arrow
     var from = new THREE.Vector3(0,0,0);
-    var to = new THREE.Vector3(100,0,0);
+    var to = new THREE.Vector3(50,0,0);
     var direction = to.clone().sub(from);
     var length = direction.length();
     var arrowHelper = new THREE.ArrowHelper(direction.normalize(), from, length, 0xff0000);
@@ -123,6 +136,11 @@ class SimObject {
     // label
     var text = document.createElement('div');
     this.label = new THREE.CSS2DObject(text);
+  }
+
+  _adjustLabelOffset() {
+    var bbox = new THREE.Box3().setFromObject(this.root);
+    this.setLabelOffset(0, bbox.max.y + 1, 0);
   }
   // ---
 

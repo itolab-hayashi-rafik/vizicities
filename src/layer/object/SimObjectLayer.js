@@ -394,6 +394,24 @@ class SimObjectLayer extends Layer {
     }
   }
 
+  /**
+   * Sets the label offset
+   *
+   * @param {Number} id id
+   * @param {Number} x x
+   * @param {Number} y y
+   * @param {Number} z z
+   */
+  setLabelOffset(id, x, y, z) {
+    // if the object exists
+    if (id in this._simObjects) {
+      var simObject = this._simObjects[id];
+
+      // update the offset
+      simObject.setLabelOffset(x, y, z);
+    }
+  }
+
   _debug() {
     var texturePosition = this._gpuCompute.readVariable(this._positionVariable);
     var textureVelocity = this._gpuCompute.readVariable(this._velocityVariable);
