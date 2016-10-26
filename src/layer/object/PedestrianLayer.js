@@ -74,6 +74,7 @@ class PedestrianLayer extends SimObjectLayer {
       // create a model
       var pedestrianModel = new PedestrianModel({
         bodyURL: model.file.body,
+        bodyTextureURL: ('textureFile' in model) ? ((typeof model.textureFile === 'string') ? model.textureFile : (typeof model.textureFile === 'object' && 'body' in model.textureFile) ? model.textureFile.body : undefined) : undefined,
         scale: scale,
         translation: translation,
         rotation: rotation

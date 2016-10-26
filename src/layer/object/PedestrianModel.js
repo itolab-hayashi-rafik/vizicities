@@ -10,7 +10,8 @@ var PedestrianModel = function(parameters, callback) {
   var p = parameters;
 
   // file paths
-  this.bodyURL  = p.bodyURL   || null;
+  this.bodyURL         = p.bodyURL         || null;
+  this.bodyTextureURL  = p.bodyTextureURL  || null;
 
   // parameters
   this.scale           = p.scale           || 1.0;
@@ -26,6 +27,7 @@ var PedestrianModel = function(parameters, callback) {
   // internal use
   this.bodyGeometry   = null;
   this.bodyMaterials  = null;
+  this.bodyTexture    = null;
 
   // construct
   if (scope.bodyURL) {
@@ -41,6 +43,15 @@ var PedestrianModel = function(parameters, callback) {
     scope.bodyGeometry = geometry;
     scope.bodyMaterials = materials;
 
+    // texture
+    if (scope.bodyTextureURL) {
+      scope.bodyTexture = THREE.ImageUtils.loadTexture(scope.bodyTextureURL);
+      if (materials.length > 0) {
+        materials[0].map = scope.bodyTexture; // FIXME: not sure if this way of setting is ok
+      }
+    }
+
+    // morph
     for (i = 0, max = materials.length; i < max; i = i + 1) {
       materials[i].morphTargets = true;
     }

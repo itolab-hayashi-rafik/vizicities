@@ -5725,6 +5725,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	      // Animation time in seconds
 	      var animationTime = duration || 2;
 	
+	      var self = this;
+	
 	      this._flyTarget = new _three2['default'].Vector3(point.x, 0, point.y);
 	
 	      // Calculate delta from current position to fly target
@@ -5764,7 +5766,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        },
 	        onComplete: function onComplete(tween) {
 	          // console.log(`Arrived at flyTarget`);
-	          this._flyTarget = null;
+	          self._flyTarget = null;
 	        },
 	        onUpdateParams: ['{self}'],
 	        onCompleteParams: ['{self}'],
@@ -18696,6 +18698,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        // create a model
 	        var pedestrianModel = new _PedestrianModel2['default']({
 	          bodyURL: model.file.body,
+	          bodyTextureURL: 'textureFile' in model ? typeof model.textureFile === 'string' ? model.textureFile : typeof model.textureFile === 'object' && 'body' in model.textureFile ? model.textureFile.body : undefined : undefined,
 	          scale: scale,
 	          translation: translation,
 	          rotation: rotation
@@ -19284,6 +19287,26 @@ return /******/ (function(modules) { // webpackBootstrap
 	        simObject.setLabelText(text);
 	      }
 	    }
+	
+	    /**
+	     * Sets the label offset
+	     *
+	     * @param {Number} id id
+	     * @param {Number} x x
+	     * @param {Number} y y
+	     * @param {Number} z z
+	     */
+	  }, {
+	    key: 'setLabelOffset',
+	    value: function setLabelOffset(id, x, y, z) {
+	      // if the object exists
+	      if (id in this._simObjects) {
+	        var simObject = this._simObjects[id];
+	
+	        // update the offset
+	        simObject.setLabelOffset(x, y, z);
+	      }
+	    }
 	  }, {
 	    key: '_debug',
 	    value: function _debug() {
@@ -19729,13 +19752,15 @@ return /******/ (function(modules) { // webpackBootstrap
 
 /***/ },
 /* 80 */
-/***/ function(module, exports) {
+/***/ function(module, exports, __webpack_require__) {
 
 	Object.defineProperty(exports, '__esModule', {
 	  value: true
 	});
 	
 	var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+	
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 	
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 	
@@ -19745,6 +19770,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	/**
 	 * Created by masayuki on 20/07/2016.
 	 */
+	
+	var _three = __webpack_require__(10);
+	
+	var _three2 = _interopRequireDefault(_three);
 	
 	var SimObject = (function () {
 	  function SimObject() {
@@ -19761,6 +19790,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	    // 2D Object
 	    this.label = undefined;
+	    this.labelOffset = new _three2['default'].Vector3();
 	
 	    // --- construct
 	    this._createSimObject();
@@ -19798,7 +19828,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    key: 'setPosition',
 	    value: function setPosition(x, y, z) {
 	      this.root.position.set(x, y, z);
-	      this.label.position.copy(this.root.position);
+	      this.label.position.copy(this.root.position).add(this.labelOffset);
 	    }
 	
 	    /**
@@ -19843,6 +19873,19 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 	
 	    /**
+	     * sets the label offset
+	     *
+	     * @param {Number} x x
+	     * @param {Number} y y
+	     * @param {Number} z z
+	     */
+	  }, {
+	    key: 'setLabelOffset',
+	    value: function setLabelOffset(x, y, z) {
+	      this.labelOffset.set(x, y, z);
+	    }
+	
+	    /**
 	     * update the object
 	     * @param {Number} delta
 	     */
@@ -19856,7 +19899,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      if (this.updatePosition) {
 	        this.root.position.x += Math.cos(-this.angle) * forwardDelta;
 	        this.root.position.z += Math.sin(-this.angle) * forwardDelta;
-	        this.label.position.copy(this.root.position);
+	        this.label.position.copy(this.root.position).add(this.labelOffset);
 	
 	        this.root.rotation.y = this.angle;
 	      }
@@ -19869,19 +19912,25 @@ return /******/ (function(modules) { // webpackBootstrap
 	      // construct this object
 	
 	      // root
-	      this.root = new THREE.Object3D();
+	      this.root = new _three2['default'].Object3D();
 	
 	      // [DEBUG] arrow
-	      var from = new THREE.Vector3(0, 0, 0);
-	      var to = new THREE.Vector3(100, 0, 0);
+	      var from = new _three2['default'].Vector3(0, 0, 0);
+	      var to = new _three2['default'].Vector3(50, 0, 0);
 	      var direction = to.clone().sub(from);
 	      var length = direction.length();
-	      var arrowHelper = new THREE.ArrowHelper(direction.normalize(), from, length, 0xff0000);
+	      var arrowHelper = new _three2['default'].ArrowHelper(direction.normalize(), from, length, 0xff0000);
 	      this.root.add(arrowHelper);
 	
 	      // label
 	      var text = document.createElement('div');
-	      this.label = new THREE.CSS2DObject(text);
+	      this.label = new _three2['default'].CSS2DObject(text);
+	    }
+	  }, {
+	    key: '_adjustLabelOffset',
+	    value: function _adjustLabelOffset() {
+	      var bbox = new _three2['default'].Box3().setFromObject(this.root);
+	      this.setLabelOffset(0, bbox.max.y + 1, 0);
 	    }
 	
 	    // ---
@@ -20768,6 +20817,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	  // file paths
 	  this.bodyURL = p.bodyURL || null;
+	  this.bodyTextureURL = p.bodyTextureURL || null;
 	
 	  // parameters
 	  this.scale = p.scale || 1.0;
@@ -20783,6 +20833,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  // internal use
 	  this.bodyGeometry = null;
 	  this.bodyMaterials = null;
+	  this.bodyTexture = null;
 	
 	  // construct
 	  if (scope.bodyURL) {
@@ -20798,6 +20849,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	    scope.bodyGeometry = geometry;
 	    scope.bodyMaterials = materials;
 	
+	    // texture
+	    if (scope.bodyTextureURL) {
+	      scope.bodyTexture = _three2['default'].ImageUtils.loadTexture(scope.bodyTextureURL);
+	      if (materials.length > 0) {
+	        materials[0].map = scope.bodyTexture; // FIXME: not sure if this way of setting is ok
+	      }
+	    }
+	
+	    // morph
 	    for (i = 0, max = materials.length; i < max; i = i + 1) {
 	      materials[i].morphTargets = true;
 	    }
@@ -21573,6 +21633,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	        // finish
 	        this.add(root);
 	
+	        // adjust the label
+	        this._adjustLabelOffset();
+	
 	        // callback
 	        if (this.callback) {
 	          this.callback(self);
@@ -22222,6 +22285,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	        // finish
 	        this.add(root);
+	
+	        // adjust the label
+	        this._adjustLabelOffset();
 	
 	        // callback
 	        if (this.callback) {
