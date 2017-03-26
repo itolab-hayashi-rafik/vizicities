@@ -24,8 +24,8 @@ const destinationFolder = path.dirname(mainFile);
 const exportFileName = path.basename(mainFile, path.extname(mainFile));
 
 // additional configurations by Masayuki (2016-07-07)
-const destinationFolder2 = '../Simultra/Server/public/vendor';
-const destinationFolder3 = '../Simultra/GoServer/public/vendor';
+const destinationFolder2 = '../simultra-js/node_modules/vizicities/dist';
+const destinationFolder3 = '../simultra-visserver/public/vendor';
 
 // Remove a directory
 function _clean(dir, done) {
