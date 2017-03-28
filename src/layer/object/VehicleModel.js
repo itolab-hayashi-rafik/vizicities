@@ -11,6 +11,9 @@ var VehicleModel = function(parameters, callback) {
   var scope = this;
   var p = parameters;
 
+  // file type
+  this.fileType = p.fileType  || 'binary';
+
   // file paths
   this.bodyURL  = p.bodyURL   || null;
   this.wheelURL = p.wheelURL  || null;
@@ -41,11 +44,21 @@ var VehicleModel = function(parameters, callback) {
   // construct
   if (scope.bodyURL && scope.wheelURL) {
     // load binaries
-    var bloader = new THREE.BinaryLoader();
-    bloader.load(scope.bodyURL, function(geometry, materials) {
+    var loader;
+    switch (this.fileType) {
+      case 'binary':
+        loader = new THREE.BinaryLoader();
+        break;
+      case 'json':
+        loader = new THREE.ObjectLoader();
+        break;
+      default:
+        throw Error('FileType ' + this.fileType + ' is not supported.');
+    }
+    loader.load(scope.bodyURL, function(geometry, materials) {
       createBody(geometry, materials);
     });
-    bloader.load(scope.wheelURL, function(geometry, materials) {
+    loader.load(scope.wheelURL, function(geometry, materials) {
       createWheel(geometry, materials);
     });
   }

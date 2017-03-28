@@ -21765,6 +21765,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    _get(Object.getPrototypeOf(VehicleLayer.prototype), 'constructor', this).call(this, _options);
 	
 	    var modelDefaults = {
+	      fileType: 'binary',
 	      file: {
 	        body: null,
 	        wheel: null
@@ -21825,6 +21826,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	        // create a model
 	        var vehicleModel = new _VehicleModel2['default']({
+	          fileType: model.fileType,
 	          bodyURL: model.file.body,
 	          wheelURL: model.file.wheel,
 	          scale: scale,
@@ -21999,6 +22001,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	  var scope = this;
 	  var p = parameters;
 	
+	  // file type
+	  this.fileType = p.fileType || 'binary';
+	
 	  // file paths
 	  this.bodyURL = p.bodyURL || null;
 	  this.wheelURL = p.wheelURL || null;
@@ -22029,11 +22034,21 @@ return /******/ (function(modules) { // webpackBootstrap
 	  // construct
 	  if (scope.bodyURL && scope.wheelURL) {
 	    // load binaries
-	    var bloader = new _three2['default'].BinaryLoader();
-	    bloader.load(scope.bodyURL, function (geometry, materials) {
+	    var loader;
+	    switch (this.fileType) {
+	      case 'binary':
+	        loader = new _three2['default'].BinaryLoader();
+	        break;
+	      case 'json':
+	        loader = new _three2['default'].ObjectLoader();
+	        break;
+	      default:
+	        throw Error('FileType ' + this.fileType + ' is not supported.');
+	    }
+	    loader.load(scope.bodyURL, function (geometry, materials) {
 	      createBody(geometry, materials);
 	    });
-	    bloader.load(scope.wheelURL, function (geometry, materials) {
+	    loader.load(scope.wheelURL, function (geometry, materials) {
 	      createWheel(geometry, materials);
 	    });
 	  }

@@ -45,6 +45,7 @@ class VehicleLayer extends SimObjectLayer {
     super(_options);
 
     var modelDefaults = {
+      fileType: 'binary',
       file: {
         body: null,
         wheel: null
@@ -102,6 +103,7 @@ class VehicleLayer extends SimObjectLayer {
 
       // create a model
       var vehicleModel = new VehicleModel({
+        fileType: model.fileType,
         bodyURL: model.file.body,
         wheelURL: model.file.wheel,
         scale: scale,
